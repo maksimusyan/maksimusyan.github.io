@@ -1,0 +1,47 @@
+# Игнорировать файлы .DS_Store (macOS)
+.DS_Store
+
+# Игнорировать папку .idea (JetBrains IDE)
+.idea/
+
+# Игнорировать файлы .vscode (VS Code)
+.vscode/
+
+# Игнорировать логи и кэш
+*.log
+*.cache
+*.tmp
+*.swp
+
+# Зависимости
+node_modules/
+
+# Логи и кэш npm/yarn
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+._*
+.Spotlight-V100
+.Trashes
+
+# Игнорировать локальные настройки
+*.local
+
+# Игнорировать резервные копии
+*~
+*.bak

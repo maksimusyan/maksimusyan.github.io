@@ -9,10 +9,20 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
     <link rel="manifest" href="/assets/site.webmanifest" />
     <title>Инструменты разработчика</title>
+    <style>
+      #pwd-list {
+        min-width: 300px;
+        min-height: 800px;
+        font-size: 16px;
+        letter-spacing: 2px;
+        line-height: 22px;
+        border: 1px solid #eaeaea;
+      }
+    </style>
   </head>
   <body>
     <h1>Твой новый пароль</h1>
-    <textarea id="new-pwd" style="min-width: 300px; min-height: 800px;"></textarea>
+    <textarea id="pwd-list" spellcheck="false"></textarea>
     <script src="/scripts/random-generator.js"></script>
     <script>
       let result = '';

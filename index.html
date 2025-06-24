@@ -21,27 +21,32 @@
     </style>
   </head>
   <body>
-    <h1>Твой новый пароль</h1>
+    <h1>Пароли</h1>
+    <div><button onclick="updateList">Генерировать заново</button></div>
     <textarea id="pwd-list" spellcheck="false"></textarea>
+
     <script src="/scripts/random-generator.js"></script>
     <script>
-      let result = '';
-
-      for (let i = 0; i <= 40; i++) {
-        const randomString = generateSecureRandomString({
-          length: 16,
-          avoidNarrowCharsOnEdges: true,
-          firstCharAlphanumeric: true,
-          lastCharAlphanumeric: true,
-          excludeChars: '}{][],.:;!|'
-        });
-
-        result += `${randomString}\n`;
+      function updateList() {
+        let result = '';
+  
+        for (let i = 0; i <= 30; i++) {
+          const randomString = generateSecureRandomString({
+            length: 24,
+            avoidNarrowCharsOnEdges: true,
+            firstCharAlphanumeric: true,
+            lastCharAlphanumeric: true,
+            excludeChars: '}{][],.:;!|'
+          });
+  
+          result += `${randomString}\n`;
+        }
+  
+        const targ = document.getElementById('pwd-list');
+        targ.value = result;
       }
 
-      const targ = document.getElementById('new-pwd');
-      targ.value = result;
-
+      updateList();
     </script>
   </body>
 </html>

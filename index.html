@@ -54,9 +54,15 @@
         const getCountVal = Number.parseInt(pwdCount.value);
         const getLengthVal = Number.parseInt(pwdLength.value);
   
-        const countPasswords = Number.isInteger(getCountVal) && getCountVal > 0 ? getCountVal : 30;
+        let countPasswords = Number.isInteger(getCountVal) && getCountVal > 0 ? getCountVal : 30;
         let lengthPassword = Number.isInteger(getLengthVal) && getLengthVal > 0 ? getLengthVal : 24;
-  
+
+        if (countPasswords > 100_000) {
+          pwdCount.value = 100_000;
+          countPasswords = 100_000;
+          alert('Слишком много паролей, большая нагрузка на процессор. Сброшено до 100К');
+        }
+
         if (lengthPassword < 3) lengthPassword = 3;
 
         let result = '';

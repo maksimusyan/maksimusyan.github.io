@@ -35,10 +35,11 @@
       var btn = document.getElementById('btn-reload');
       var list = document.getElementById('pwd-list');
       
-      function updateList() {
+      function updateList(count_items) {
+        const count = Number.isInteger(count_items) && count_items > 0 ? count_items : 30;
         let result = '';
-  
-        for (let i = 0; i <= 30; i++) {
+
+        for (let i = 0; i <= count; i++) {
           const randomString = generateSecureRandomString({
             length: 24,
             avoidNarrowCharsOnEdges: true,
@@ -54,10 +55,10 @@
       }
 
       btn.addEventListener('click', (e) => {
-        updateList();
+        updateList(30);
       });
 
-      updateList();
+      updateList(30);
     </script>
   </body>
 </html>

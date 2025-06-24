@@ -21,27 +21,48 @@
       .box {
         margin: 10px 0 10px 0;
       }
+      #pwd-count {
+        width: 100px;
+        margin-right: 10px;
+      }
+      #pwd-length {
+        width: 50px;
+        margin-right: 10px;
+      }
     </style>
   </head>
   <body>
     <h1>Пароли</h1>
     <div class="box">
-      <button id="btn-reload">Генерировать заново</button>
+      Кол-во: 
+      <input id="pwd-count" type="number" min="1" max="100000" step="1" value="30" />
+      Длина пароля: 
+      <input id="pwd-length" type="number" min="3" max="64" step="1" value="24" />
+      <button id="btn-reload">Генерировать</button>
     </div>
     <textarea id="pwd-list" spellcheck="false"></textarea>
 
     <script src="/scripts/random-generator.js"></script>
     <script>
+      var pwdCount = document.getElementById('pwd-count');
+      var pwdLength = document.getElementById('pwd-length');
       var btn = document.getElementById('btn-reload');
       var list = document.getElementById('pwd-list');
+
+      var getCountVal = Number.parseInt(pwdCount.value);
+      var getLengthVal = Number.parseInt(pwdLength.value);
+
+      var countPasswords = Number.isInteger(getCountVal) && getCountVal > 0 ? getCountVal : 30;
+      var lengthPassword = Number.isInteger(getLengthVal) && getLengthVal > 0 ? getLengthVal : 24;
+
+      if (lengthPassword < 3) lengthPassword = 3;
       
-      function updateList(count_items) {
-        const count = Number.isInteger(count_items) && count_items > 0 ? count_items : 30;
+      function updateList() {
         let result = '';
 
-        for (let i = 0; i <= count; i++) {
+        for (let i = 0; i <= countPasswords; i++) {
           const randomString = generateSecureRandomString({
-            length: 24,
+            length: lengthPassword,
             avoidNarrowCharsOnEdges: true,
             firstCharAlphanumeric: true,
             lastCharAlphanumeric: true,
@@ -55,10 +76,10 @@
       }
 
       btn.addEventListener('click', (e) => {
-        updateList(30);
+        updateList();
       });
 
-      updateList(30);
+      updateList();
     </script>
   </body>
 </html>

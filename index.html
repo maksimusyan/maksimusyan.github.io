@@ -18,15 +18,23 @@
         line-height: 22px;
         border: 1px solid #eaeaea;
       }
+      .box {
+        margin: 10px 0 10px 0;
+      }
     </style>
   </head>
   <body>
     <h1>Пароли</h1>
-    <div><button onclick="updateList">Генерировать заново</button></div>
+    <div class="box">
+      <button id="btn-reload">Генерировать заново</button>
+    </div>
     <textarea id="pwd-list" spellcheck="false"></textarea>
 
     <script src="/scripts/random-generator.js"></script>
     <script>
+      var btn = document.getElementById('btn-reload');
+      var list = document.getElementById('pwd-list');
+      
       function updateList() {
         let result = '';
   
@@ -41,10 +49,13 @@
   
           result += `${randomString}\n`;
         }
-  
-        const targ = document.getElementById('pwd-list');
-        targ.value = result;
+          
+        list.value = result;
       }
+
+      btn.addEventListener('click', (e) => {
+        updateList();
+      });
 
       updateList();
     </script>

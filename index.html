@@ -62,8 +62,13 @@
           countPasswords = 100_000;
           alert('Слишком много паролей, большая нагрузка на процессор. Сброшено до 100К');
         }
-
+        
         if (lengthPassword < 3) lengthPassword = 3;
+
+        if (lengthPassword > 64) {
+          pwdLength.value = 64;
+          lengthPassword = 64;
+        }
 
         let result = '';
 

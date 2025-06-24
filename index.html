@@ -44,20 +44,19 @@
 
     <script src="/scripts/random-generator.js"></script>
     <script>
-      var pwdCount = document.getElementById('pwd-count');
-      var pwdLength = document.getElementById('pwd-length');
-      var btn = document.getElementById('btn-reload');
-      var list = document.getElementById('pwd-list');
-
-      var getCountVal = Number.parseInt(pwdCount.value);
-      var getLengthVal = Number.parseInt(pwdLength.value);
-
-      var countPasswords = Number.isInteger(getCountVal) && getCountVal > 0 ? getCountVal : 30;
-      var lengthPassword = Number.isInteger(getLengthVal) && getLengthVal > 0 ? getLengthVal : 24;
-
-      if (lengthPassword < 3) lengthPassword = 3;
-      
       function updateList() {
+        const pwdList = document.getElementById('pwd-list');
+        const pwdCount = document.getElementById('pwd-count');
+        const pwdLength = document.getElementById('pwd-length');
+        
+        const getCountVal = Number.parseInt(pwdCount.value);
+        const getLengthVal = Number.parseInt(pwdLength.value);
+  
+        const countPasswords = Number.isInteger(getCountVal) && getCountVal > 0 ? getCountVal : 30;
+        let lengthPassword = Number.isInteger(getLengthVal) && getLengthVal > 0 ? getLengthVal : 24;
+  
+        if (lengthPassword < 3) lengthPassword = 3;
+
         let result = '';
 
         for (let i = 0; i <= countPasswords; i++) {
@@ -72,9 +71,10 @@
           result += `${randomString}\n`;
         }
           
-        list.value = result;
+        pwdList.value = result;
       }
 
+      var btn = document.getElementById('btn-reload');
       btn.addEventListener('click', (e) => {
         updateList();
       });

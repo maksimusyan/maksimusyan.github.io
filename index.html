@@ -15,14 +15,23 @@
     <div id="new-pwd"></div>
     <script src="/scripts/random-generator.js"></script>
     <script>
-      const randomString = generateSecureRandomString({
-        length: 16,
-        avoidNarrowCharsOnEdges: true,
-        firstCharAlphanumeric: true,
-        lastCharAlphanumeric: true,
-      });
+      let result = '';
+
+      for (let i = 0; i < 6; i++) {
+        const randomString = generateSecureRandomString({
+          length: 16,
+          avoidNarrowCharsOnEdges: true,
+          firstCharAlphanumeric: true,
+          lastCharAlphanumeric: true,
+          excludeChars: '}{][],.:;!|'
+        });
+
+        result += `${randomString}<br>`;
+      }
+
       const targ = document.getElementById('new-pwd');
-      targ.innerHTML = randomString;
+      targ.innerHTML = result;
+
     </script>
   </body>
 </html>

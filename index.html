@@ -12,12 +12,12 @@
   </head>
   <body>
     <h1>Твой новый пароль</h1>
-    <div id="new-pwd"></div>
+    <pre id="new-pwd"></pre>
     <script src="/scripts/random-generator.js"></script>
     <script>
       let result = '';
 
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i <= 10; i++) {
         const randomString = generateSecureRandomString({
           length: 16,
           avoidNarrowCharsOnEdges: true,
@@ -26,7 +26,7 @@
           excludeChars: '}{][],.:;!|'
         });
 
-        result += `${randomString}<br>`;
+        result += `${randomString}\n`;
       }
 
       const targ = document.getElementById('new-pwd');

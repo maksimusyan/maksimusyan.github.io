@@ -107,68 +107,172 @@
                 no-caps
               >
               </q-btn>
-              <q-btn
-                color="secondary"
-                icon="download"
-                class="q-ml-sm"
-                @click="saveToFile"
-                title="Скачать как текстовый файл"
-                square
-              >
-              </q-btn>
             </div>
 
             <!-- НАСТРОЙКИ ГЕНЕРАЦИИ -->
-            <div class="pwd-options q-my-md column justify-start">
-              <q-toggle
-                v-model="avoidNarrowCharsOnEdges"
-                label="Убрать узкие символы по краям"
-              >
-                <q-icon name="help_outline" color="grey-7" size="16px" class="q-ml-xs">
-                  <q-tooltip
-                    anchor="center right"
-                    self="center left"
-                    :offset="[10, 10]"
-                    class="bg-cyan-7 text-white"
-                    style="font-size: 15px"
-                  >
-                    У всех паролей по краям будут убраны<br>
-                    символы, которые трудно выделить<br>
-                    курсором мыши.<br>
-                    Эта настройка помогает избежать ошибок<br>
-                    при копировании и передаче пароля
-                  </q-tooltip>
-                </q-icon>
-              </q-toggle>
-              <q-toggle
-                v-model="firstCharAlphanumeric"
-                label="Первый символ всегда буквенно-числовой"
-              >
-              </q-toggle>
-              <q-toggle
-                v-model="lastCharAlphanumeric"
-                label="Последний символ всегда буквенно-числовой"
-              >
-              </q-toggle>
-              <!--
+            <div class="pwd-options q-my-md">
+              <div>
+                <q-toggle
+                  v-model="includeUppercase"
+                  label="Включить буквы верхнего регистра"
+                >
+                </q-toggle>
+              </div>
+              <div>
+                <q-toggle
+                  v-model="includeLowercase"
+                  label="Включить буквы нижнего регистра"
+                >
+                </q-toggle>
+              </div>
+              <div>
+                <q-toggle
+                  v-model="includeNumbers"
+                  label="Включить цифры"
+                >
+                </q-toggle>
+              </div>
+              <div>
+                <q-toggle
+                  v-model="includeSpecialChars"
+                  label="Включить спецсимволы"
+                >
+                </q-toggle>
+              </div>
+              <div>
+                <q-toggle
+                  v-model="avoidNarrowCharsOnEdges"
+                  label="Убрать узкие символы по краям"
+                >
+                  <q-icon name="help_outline" color="grey-7" size="16px" class="q-ml-xs">
+                    <q-tooltip
+                      anchor="center right"
+                      self="center left"
+                      :offset="[10, 10]"
+                      class="q-pa-md bg-blue-grey-9 text-white"
+                      style="font-size: 15px"
+                    >
+                      У всех паролей по краям будут убраны<br>
+                      символы, которые трудно выделить<br>
+                      курсором мыши.<br>
+                      Эта настройка помогает избежать ошибок<br>
+                      при копировании и передаче пароля
+                    </q-tooltip>
+                  </q-icon>
+                </q-toggle>
+              </div>
+              <div>
+                <q-toggle
+                  v-model="firstCharAlphanumeric"
+                  label="Первый символ всегда буквенно-числовой"
+                >
+                  <q-icon name="help_outline" color="grey-7" size="16px" class="q-ml-xs">
+                    <q-tooltip
+                      anchor="center right"
+                      self="center left"
+                      :offset="[10, 10]"
+                      class="q-pa-md bg-blue-grey-9 text-white"
+                      style="font-size: 15px"
+                    >
+                      Эта настройка помогает избежать ошибок<br>
+                      при сохранении пароля в Excel-таблицу,<br>
+                      где первый символ используется в формулах<br>
+                    </q-tooltip>
+                  </q-icon>
+                </q-toggle>
+              </div>
+              <div>
+                <q-toggle
+                  v-model="lastCharAlphanumeric"
+                  label="Последний символ всегда буквенно-числовой"
+                >
+                </q-toggle>
+              </div>
+              <div>
+                <q-toggle
+                  v-model="excludeSimilarChars"
+                  label="Исключить похожие символы"
+                >
+                  <q-icon name="help_outline" color="grey-7" size="16px" class="q-ml-xs">
+                    <q-tooltip
+                      anchor="center right"
+                      self="center left"
+                      :offset="[10, 10]"
+                      class="q-pa-md bg-blue-grey-9 text-white"
+                      style="font-size: 15px"
+                    >
+                      У всех паролей будут убраны символы,<br>
+                      которые можно спутать с некоторыми<br>
+                      другими символами.<br>
+                      Эта настройка помогает избежать ошибок<br>
+                      при чтении пароля с бумаги или при<br>
+                      использовании различных шрифтов.<br>
+                      Пример похожих символов: Il!10O<br>
+                    </q-tooltip>
+                  </q-icon>
+                </q-toggle>
+              </div>
+              <div>
+                <q-toggle
+                  v-model="forceFallback"
+                  label="Использовать менее безопасный метод"
+                  color="negative"
+                  flat
+                >
+                  <q-icon name="warning" color="negative" size="16px" class="q-ml-xs">
+                    <q-tooltip
+                      anchor="center right"
+                      self="center left"
+                      :offset="[10, 10]"
+                      class="q-pa-md bg-blue-grey-9 text-white"
+                      style="font-size: 15px"
+                    >
+                      По умолчанию, для генерации используется<br>
+                      криптографически сильный генератор<br>
+                      случайных чисел (window.crypto).<br>
+                      Эта настройка позволяет использовать<br>
+                      резервный метод генерации на основе<br>
+                      метода Math.random(), что делает<br>
+                      итоговую строку более предсказуемой<br>
+                      (снижается безопасность пароля)
+                    </q-tooltip>
+                  </q-icon>
+                </q-toggle>
+              </div>
+              <div class="exclude-chars-wrap">
                 <q-input
-                  v-model.trim="excludeChars"
+                  v-model="excludeChars"
                   label="Исключить символы"
-                  type="text"
-                  class="col-6"
+                  type="textarea"
                   outlined
-                  dense
+                  filled
+                  autogrow
                 >
                 </q-input>
-              -->
+              </div>
             </div>
             
             <!-- ПОЛЕ С ПАРОЛЯМИ -->
-            <div class="pwd-list-wrap">
+            <div class="pwd-list-wrap q-mt-lg">
+              <div class="row justify-start items-center">
+                <div class="text-h5 q-mr-lg">Список паролей</div>
+                <q-btn
+                  color="secondary"
+                  icon="download"
+                  label="Скачать"
+                  @click="saveToFile"
+                  class="q-ml-sm"
+                  title="Скачать как текстовый файл"
+                  no-caps
+                  flat
+                  dense
+                >
+                </q-btn>
+              </div>
               <q-input
                 v-model.trim="pwdList"
                 type="textarea"
-                class="col-12 q-mt-md"
+                class="col-12 q-mt-sm"
                 spellcheck="false"
                 input-class="pwd-list"
                 outlined
@@ -202,9 +306,15 @@
 
           // Настройка генерации пароля
           const avoidNarrowCharsOnEdges = ref(true);
-          const firstCharAlphanumeric = ref(true);
-          const lastCharAlphanumeric = ref(true);
+          const excludeSimilarChars = ref(false);
+          const firstCharAlphanumeric = ref(false);
+          const includeLowercase = ref(true);
+          const includeNumbers = ref(true);
+          const includeSpecialChars = ref(true);
+          const includeUppercase = ref(true);
+          const lastCharAlphanumeric = ref(false);
           const excludeChars = ref('}{][],.:;!|');
+          const forceFallback = ref(false);
 
           /** Переключение видимости левого меню */
           function toggleLeftDrawer() {
@@ -230,9 +340,15 @@
               const randomString = generateSecureRandomString({
                 length: pwdLength.value,
                 avoidNarrowCharsOnEdges: avoidNarrowCharsOnEdges.value,
+                excludeChars: excludeChars.value,
+                excludeSimilarChars: excludeSimilarChars.value,
                 firstCharAlphanumeric: firstCharAlphanumeric.value,
+                forceFallback: forceFallback.value,
+                includeLowercase: includeLowercase.value,
+                includeNumbers: includeNumbers.value,
+                includeSpecialChars: includeSpecialChars.value,
+                includeUppercase: includeUppercase.value,
                 lastCharAlphanumeric: lastCharAlphanumeric.value,
-                excludeChars: excludeChars.value
               });
       
               result += `${randomString}\n`;
@@ -277,7 +393,14 @@
 
           return {
             avoidNarrowCharsOnEdges,
+            excludeChars,
+            excludeSimilarChars,
             firstCharAlphanumeric,
+            forceFallback,
+            includeLowercase,
+            includeNumbers,
+            includeSpecialChars,
+            includeUppercase,
             lastCharAlphanumeric,
             leftDrawerOpen,
             pwdCount,

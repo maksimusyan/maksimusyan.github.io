@@ -10,3 +10,6 @@
   line-height: 22px;
   border: 1px solid #eaeaea;
 }
+.exclude-chars-wrap{
+  max-width: 500px;
+}

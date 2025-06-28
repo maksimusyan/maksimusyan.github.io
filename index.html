@@ -100,8 +100,70 @@
                 dense
               >
               </q-input>
-              <q-btn color="primary" label="Генерировать" @click="updateList" no-caps></q-btn>
+              <q-btn
+                color="primary"
+                label="Генерировать"
+                @click="updateList"
+                no-caps
+              >
+              </q-btn>
+              <q-btn
+                color="secondary"
+                icon="download"
+                class="q-ml-sm"
+                @click="saveToFile"
+                title="Скачать как текстовый файл"
+                square
+              >
+              </q-btn>
             </div>
+
+            <!-- НАСТРОЙКИ ГЕНЕРАЦИИ -->
+            <div class="pwd-options q-my-md column justify-start">
+              <q-toggle
+                v-model="avoidNarrowCharsOnEdges"
+                label="Убрать узкие символы по краям"
+              >
+                <q-icon name="help_outline" color="grey-7" size="16px" class="q-ml-xs">
+                  <q-tooltip
+                    anchor="center right"
+                    self="center left"
+                    :offset="[10, 10]"
+                    class="bg-cyan-7 text-white"
+                    style="font-size: 15px"
+                  >
+                    У всех паролей по краям будут убраны<br>
+                    символы, которые трудно выделить<br>
+                    курсором мыши.<br>
+                    Эта настройка помогает избежать ошибок<br>
+                    при копировании и передаче пароля
+                  </q-tooltip>
+                </q-icon>
+              </q-toggle>
+              <q-toggle
+                v-model="firstCharAlphanumeric"
+                label="Первый символ всегда буквенно-числовой"
+              >
+              </q-toggle>
+              <q-toggle
+                v-model="lastCharAlphanumeric"
+                label="Последний символ всегда буквенно-числовой"
+              >
+              </q-toggle>
+              <!--
+                <q-input
+                  v-model.trim="excludeChars"
+                  label="Исключить символы"
+                  type="text"
+                  class="col-6"
+                  outlined
+                  dense
+                >
+                </q-input>
+              -->
+            </div>
+            
+            <!-- ПОЛЕ С ПАРОЛЯМИ -->
             <div class="pwd-list-wrap">
               <q-input
                 v-model.trim="pwdList"
@@ -138,6 +200,12 @@
           const pwdLength = ref(24);
           const pwdList = ref('');
 
+          // Настройка генерации пароля
+          const avoidNarrowCharsOnEdges = ref(true);
+          const firstCharAlphanumeric = ref(true);
+          const lastCharAlphanumeric = ref(true);
+          const excludeChars = ref('}{][],.:;!|');
+
           /** Переключение видимости левого меню */
           function toggleLeftDrawer() {
             leftDrawerOpen.value = !leftDrawerOpen.value
@@ -161,10 +229,10 @@
             for (let i = 0; i <= pwdCount.value; i++) {
               const randomString = generateSecureRandomString({
                 length: pwdLength.value,
-                avoidNarrowCharsOnEdges: true,
-                firstCharAlphanumeric: true,
-                lastCharAlphanumeric: true,
-                excludeChars: '}{][],.:;!|'
+                avoidNarrowCharsOnEdges: avoidNarrowCharsOnEdges.value,
+                firstCharAlphanumeric: firstCharAlphanumeric.value,
+                lastCharAlphanumeric: lastCharAlphanumeric.value,
+                excludeChars: excludeChars.value
               });
       
               result += `${randomString}\n`;
@@ -173,6 +241,34 @@
             pwdList.value = result;
           }
           
+          /** Метод сохранения списка паролей в файл */
+          function saveToFile() {
+            if (!pwdList.value.trim()) {
+              alert('Текст для сохранения отсутствует!');
+              return;
+            }
+
+            // Создаем Blob с содержимым текста
+            const blob = new Blob([pwdList.value], { type: 'text/plain' });
+            
+            // Создаем URL для Blob
+            const url = URL.createObjectURL(blob);
+
+            // Создаем временную ссылку для скачивания
+            const a = document.createElement('a');
+            a.href = url;
+            // Имя файла по умолчанию
+            a.download = `passwords_${Date.now()}.txt`;
+            
+            // Добавляем ссылку в DOM и эмулируем клик
+            document.body.appendChild(a);
+            a.click();
+            
+            // Убираем ссылку после скачивания
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          };
+
           // События после монтирования приложения
           onMounted(() => {
             console.log(pwdList.value);
@@ -180,10 +276,14 @@
           })
 
           return {
+            avoidNarrowCharsOnEdges,
+            firstCharAlphanumeric,
+            lastCharAlphanumeric,
             leftDrawerOpen,
             pwdCount,
             pwdLength,
             pwdList,
+            saveToFile,
             toggleLeftDrawer,
             updateList,
           };
@@ -194,9 +294,6 @@
       Quasar.Lang.set(Quasar.Lang.ru);
       Quasar.IconSet.set(Quasar.IconSet.fontawesomeV6);
       app.mount('#q-app');
-
-
-
     </script>
   </body>
 </html>

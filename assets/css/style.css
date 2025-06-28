@@ -1,0 +1,12 @@
+.pwd-list-wrap {
+  min-width: 300px;
+  max-width: 900px;
+}
+.pwd-list-wrap .pwd-list {
+  height: 700px;
+  min-height: 300px;
+  font-size: 16px;
+  letter-spacing: 2px;
+  line-height: 22px;
+  border: 1px solid #eaeaea;
+}

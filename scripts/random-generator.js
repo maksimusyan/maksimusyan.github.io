@@ -82,66 +82,74 @@
     return commonChars;
   }
 
-function generateRandomString(config, chars, alphanumericChars, wideChars) {
-    const maxAttempts = 10;
-    let result = '';
-    let attempts = 0;
+  /**
+   * 
+   * @param {Object} config - Объект с настройками генерации
+   * @param {String} chars Набор всех используемых символов
+   * @param {String} alphanumericChars Набор цифро-буквенных символов
+   * @param {String} wideChars  Набор "широких" символов
+   * @returns {String} Случайная строка
+   */
+  function generateRandomString(config, chars, alphanumericChars, wideChars) {
+      const maxAttempts = 10;
+      let result = '';
+      let attempts = 0;
 
-    while (result.length < config.length && attempts < maxAttempts) {
-        const remainingLength = config.length - result.length;
-        const randomValues = new Uint32Array(remainingLength);
-        crypto.getRandomValues(randomValues);
+      while (result.length < config.length && attempts < maxAttempts) {
+          const remainingLength = config.length - result.length;
+          const randomValues = new Uint32Array(remainingLength);
+          crypto.getRandomValues(randomValues);
 
-        let i = 0;
-        while (i < remainingLength && result.length < config.length) {
-            const position = result.length === 0 
-                ? 'first' 
-                : (result.length === config.length - 1 ? 'last' : 'middle');
-            
-            let availableChars = getAvailableChars(
-                config, 
-                chars, 
-                alphanumericChars, 
-                wideChars, 
-                position
-            );
+          let i = 0;
+          while (i < remainingLength && result.length < config.length) {
+              const position = result.length === 0 
+                  ? 'first' 
+                  : (result.length === config.length - 1 ? 'last' : 'middle');
+              
+              let availableChars = getAvailableChars(
+                  config, 
+                  chars, 
+                  alphanumericChars, 
+                  wideChars, 
+                  position
+              );
 
-            if (availableChars.length === 0) {
-                availableChars = getAvailableChars(
-                    config, 
-                    chars, 
-                    alphanumericChars, 
-                    wideChars, 
-                    'any'
-                );
-            }
+              if (availableChars.length === 0) {
+                  availableChars = getAvailableChars(
+                      config, 
+                      chars, 
+                      alphanumericChars, 
+                      wideChars, 
+                      'any'
+                  );
+              }
 
-            if (availableChars.length > 0) {
-                const randomIndex = randomValues[i] % availableChars.length;
-                result += availableChars[randomIndex];
-                i++; // Увеличиваем счётчик только при успешном добавлении символа
-            } else {
-                break; // Если символов нет, прерываем цикл
-            }
-        }
+              if (availableChars.length > 0) {
+                  const randomIndex = randomValues[i] % availableChars.length;
+                  result += availableChars[randomIndex];
+                  i++; // Увеличиваем счётчик только при успешном добавлении символа
+              } else {
+                  break; // Если символов нет, прерываем цикл
+              }
+          }
 
-        attempts++;
-    }
+          attempts++;
+      }
 
-    // Добиваем строку до нужной длины, если не хватило символов
-    if (result.length < config.length) {
-        const fallbackChar = getAvailableChars(
-            config, 
-            chars, 
-            alphanumericChars, 
-            wideChars, 
-            'any'
-        )[0] || 'a';
-        result += fallbackChar.repeat(config.length - result.length);
-    }
+      // Добиваем строку до нужной длины, если не хватило символов
+      if (result.length < config.length) {
+          const fallbackChar = getAvailableChars(
+              config, 
+              chars, 
+              alphanumericChars, 
+              wideChars, 
+              'any'
+          )[0] || 'a';
+          result += fallbackChar.repeat(config.length - result.length);
+      }
 
-    return result;
-}
+      return result;
+  }
 
   /**
    * Генерирует случайную строку с настройками

@@ -9,90 +9,194 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
     <link rel="manifest" href="/assets/site.webmanifest" />
     <title>Инструменты разработчика</title>
-    <style>
-      #pwd-list {
-        width: 960px;
-        height: 700px;
-        min-width: 300px;
-        min-height: 300px;
-        font-size: 16px;
-        letter-spacing: 2px;
-        line-height: 22px;
-        border: 1px solid #eaeaea;
-      }
-      .box {
-        margin: 10px 0 10px 0;
-      }
-      #pwd-count {
-        width: 100px;
-        margin-right: 10px;
-      }
-      #pwd-length {
-        width: 50px;
-        margin-right: 10px;
-      }
-    </style>
+    <!-- Styles -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons|Material+Icons+Outlined" rel="stylesheet" type="text/css">
+    <link href="/assets/css/fontawesome-all.css" rel="stylesheet" type="text/css">
+    <link href="/assets/css/animate.min.css" rel="stylesheet" type="text/css">
+    <link href="/assets/css/quasar.prod.css" rel="stylesheet" type="text/css">
+    <link href="/assets/css/style.css" rel="stylesheet" type="text/css">
   </head>
   <body>
-    <h1>Пароли</h1>
-    <div class="box">
-      Кол-во: 
-      <input id="pwd-count" type="number" min="1" max="100000" step="1" value="30" />
-      Длина пароля: 
-      <input id="pwd-length" type="number" min="3" max="64" step="1" value="24" />
-      <button id="btn-reload">Генерировать</button>
-    </div>
-    <textarea id="pwd-list" spellcheck="false"></textarea>
+    <div id="q-app">
+      <q-layout view="lHh Lpr lFf" class="bg-white">
+        <q-header elevated>
+          <q-toolbar>
+            <q-btn
+              flat
+              dense
+              round
+              @click="toggleLeftDrawer"
+              aria-label="Menu"
+              icon="menu"
+            >
+            </q-btn>
+            <q-toolbar-title>
+              Генератор паролей
+            </q-toolbar-title>
+          </q-toolbar>
+        </q-header>
 
+        <q-drawer
+          v-model="leftDrawerOpen"
+          show-if-above
+          bordered
+          class="bg-grey-2"
+        >
+          <div class="q-mt-lg row justify-center items-center">
+            <q-avatar size="180px">
+              <img src="/assets/images/avatar.jpeg">
+            </q-avatar>
+          </div>
+
+          <q-list class="q-mt-lg">
+            <q-item clickable target="_blank" rel="noopener" href="https://github.com/maksimusyan/">
+              <q-item-section avatar>
+                <q-icon name="code" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>GitHub</q-item-label>
+                <q-item-label caption>github.com/maksimusyan/</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item clickable target="_blank" rel="noopener" href="mailto:maksimusyan@gmail.com">
+              <q-item-section avatar>
+                <q-icon name="email" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Email</q-item-label>
+                <q-item-label caption>maksimusyan@gmail.com</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item clickable target="_blank" rel="noopener" href="https://t.me/maksimusyan">
+              <q-item-section avatar>
+                <q-icon name="telegram" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Telegram</q-item-label>
+                <q-item-label caption>@maksimusyan</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-drawer>
+
+        <q-page-container>
+          <div class="q-pa-lg">
+            <div class="q-mt-md row justify-start items-center">
+              <q-input
+                v-model.number="pwdCount"
+                label="Количество паролей"
+                type="number"
+                class="col-3 q-mr-sm"
+                outlined
+                dense
+              >
+              </q-input>
+              <q-input
+                v-model.number="pwdLength"
+                label="Длина пароля"
+                type="number"
+                class="col-3 q-mr-sm"
+                outlined
+                dense
+              >
+              </q-input>
+              <q-btn color="primary" label="Генерировать" @click="updateList" no-caps></q-btn>
+            </div>
+            <div class="pwd-list-wrap">
+              <q-input
+                v-model.trim="pwdList"
+                type="textarea"
+                class="col-12 q-mt-md"
+                spellcheck="false"
+                input-class="pwd-list"
+                outlined
+                filled
+              >
+              </q-input>
+            </div>
+          </div>
+        </q-page-container>
+      </q-layout>
+    </div>
+
+    <!-- Add the following at the end of your body tag -->
+    <script src="/assets/js/vue.global.prod.js"></script>
+    <script src="/assets/js/quasar.umd.prod.js"></script>
+    <script src="/assets/js/ru.umd.prod.js"></script>
+    <script src="/assets/js/fontawesome-v6.umd.prod.js"></script>
     <script src="/scripts/random-generator.js"></script>
     <script>
-      function updateList() {
-        const pwdList = document.getElementById('pwd-list');
-        const pwdCount = document.getElementById('pwd-count');
-        const pwdLength = document.getElementById('pwd-length');
-        
-        const getCountVal = Number.parseInt(pwdCount.value);
-        const getLengthVal = Number.parseInt(pwdLength.value);
-  
-        let countPasswords = Number.isInteger(getCountVal) && getCountVal > 0 ? getCountVal : 30;
-        let lengthPassword = Number.isInteger(getLengthVal) && getLengthVal > 0 ? getLengthVal : 24;
+      const app = Vue.createApp({
+        setup () {
+          // Прокси-переменные
+          const onMounted = Vue.onMounted;
+          const ref = Vue.ref;
+          const refs = Vue.$refs;
 
-        if (countPasswords > 100_000) {
-          pwdCount.value = 100_000;
-          countPasswords = 100_000;
-          alert('Слишком много паролей, большая нагрузка на процессор. Сброшено до 100К');
-        }
-        
-        if (lengthPassword < 3) lengthPassword = 3;
+          const leftDrawerOpen = ref(true);
+          const pwdCount = ref(30);
+          const pwdLength = ref(24);
+          const pwdList = ref('');
 
-        if (lengthPassword > 64) {
-          pwdLength.value = 64;
-          lengthPassword = 64;
-        }
+          /** Переключение видимости левого меню */
+          function toggleLeftDrawer() {
+            leftDrawerOpen.value = !leftDrawerOpen.value
+          }
 
-        let result = '';
+          /** Метод обновления списка паролей */
+          function updateList() {
+            if (pwdCount.value > 100_000) {
+              pwdCount.value = 100_000;
+              alert('Слишком много паролей, большая нагрузка на процессор. Сброшено до 100К');
+            }
+            
+            if (pwdLength.value < 3) pwdLength.value = 3;
 
-        for (let i = 0; i <= countPasswords; i++) {
-          const randomString = generateSecureRandomString({
-            length: lengthPassword,
-            avoidNarrowCharsOnEdges: true,
-            firstCharAlphanumeric: true,
-            lastCharAlphanumeric: true,
-            excludeChars: '}{][],.:;!|'
-          });
-  
-          result += `${randomString}\n`;
-        }
+            if (pwdLength.value > 64) {
+              pwdLength.value = 64;
+            }
+
+            let result = '';
+
+            for (let i = 0; i <= pwdCount.value; i++) {
+              const randomString = generateSecureRandomString({
+                length: pwdLength.value,
+                avoidNarrowCharsOnEdges: true,
+                firstCharAlphanumeric: true,
+                lastCharAlphanumeric: true,
+                excludeChars: '}{][],.:;!|'
+              });
+      
+              result += `${randomString}\n`;
+            }
+              
+            pwdList.value = result;
+          }
           
-        pwdList.value = result;
-      }
+          // События после монтирования приложения
+          onMounted(() => {
+            console.log(pwdList.value);
+            updateList();
+          })
 
-      var btn = document.getElementById('btn-reload');
-      btn.addEventListener('click', (e) => {
-        updateList();
+          return {
+            leftDrawerOpen,
+            pwdCount,
+            pwdLength,
+            pwdList,
+            toggleLeftDrawer,
+            updateList,
+          };
+        }
       });
 
-      updateList();
+      app.use(Quasar);
+      Quasar.Lang.set(Quasar.Lang.ru);
+      Quasar.IconSet.set(Quasar.IconSet.fontawesomeV6);
+      app.mount('#q-app');
+
+
+
     </script>
   </body>
 </html>

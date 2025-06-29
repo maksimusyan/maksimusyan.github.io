@@ -4,9 +4,19 @@
   } else if (typeof exports === 'object') {
     module.exports = factory();
   } else {
-    root.generateSecureRandomString = factory();
+    root.SecureRandomStringGenerator = factory();
   }
 }(typeof self !== 'undefined' ? self : this, function () {
+  /** Маркер доступности объекта window.crypto */
+  let isSecure = true;
+  /** Инстанция объекта Crypto */
+  const instCrypto = getCrypto();
+
+  /**
+   * Резервная функция генерации случайных чисел
+   * @param {Uint32Array} buffer Массив нулей
+   * @returns {Uint32Array} Массив из почти случайных чисел
+   */
   function fallbackGetRandomValues(buffer) {
     for (let i = 0; i < buffer.length; i++) {
       buffer[i] = Math.floor(Math.random() * 4294967296);
@@ -14,28 +24,49 @@
     return buffer;
   }
 
+  /**
+   * Получение объекта с методом генерации случайных чисел
+   * @returns {Object} Объект Crypto или его аналог
+   */
   function getCrypto() {
-    let crypto;
+    let cryptoObj;
 
     // Браузер (включая IE)
     if (typeof window !== 'undefined') {
-      crypto = window.crypto || window.msCrypto;
+      cryptoObj = window.crypto || window.msCrypto;
     } 
     // Node.js
     else if (typeof global !== 'undefined') {
-      crypto = global.crypto;
+      cryptoObj = global.crypto;
     } 
     // Web Workers / Service Workers
     else if (typeof self !== 'undefined') {
-      crypto = self.crypto;
+      cryptoObj = self.crypto;
     }
+
+    // Если удалось получить window.crypto - возвращаем объект
+    // с методом генерации криптографически сильной случайной строки
+    if (cryptoObj && cryptoObj.getRandomValues) {
+      return { getRandomValues: cryptoObj.getRandomValues.bind(cryptoObj) };
+    }
+
+    // В противном случае переключаем маркер наличия window.crypto
+    // и возвращаем объект с менее безопасным методом генерации строки
+
+    isSecure = false;
     
-    // Возвращаем объект, содержащий метод из Crypto или "запасную" функцию
-    return crypto && crypto.getRandomValues 
-      ? { getRandomValues: crypto.getRandomValues.bind(crypto), isSecure: true, warning: '' }
-      : { getRandomValues: fallbackGetRandomValues, isSecure: false, warning: 'Используется менее безопасный метод Math.random()!' };
+    return { getRandomValues: fallbackGetRandomValues };
   }
 
+  /**
+   * Получение допустимых символов для конкретной позиции символа в строке пароля
+   * @param {Object} options Объект с настройками генерации
+   * @param {String} chars Набор всех используемых символов
+   * @param {String} alphanumericChars Набор буквенно-цифровых символов
+   * @param {String} wideChars  Набор "широких" символов
+   * @param {Number} position Позиция генерируемого символа
+   * @returns {String} Строка с допустимыми символами
+   */
   function getAvailableChars(options, chars, alphanumericChars, wideChars, position) {
     // По умолчанию доступны все указанные символы 
     let availableChars = chars;
@@ -61,8 +92,8 @@
   /**
    * Возвращает строку, состоящую из символов, которые присутствуют в обеих переданных строках.
    * Порядок символов сохраняется согласно firstString.
-   * @param {string} firstString - Первая строка для сравнения символов
-   * @param {string} secondString - Вторая строка для сравнения символов
+   * @param {string} firstString Первая строка для сравнения символов
+   * @param {string} secondString Вторая строка для сравнения символов
    * @returns {string} Строка, содержащая только общие символы из firstString и secondString
    * @example
    * intersectStrings("abc", "bcd") → "bc"
@@ -83,11 +114,11 @@
   }
 
   /**
-   * 
-   * @param {Object} config - Объект с настройками генерации
+   * Генерация случайной строки на основе подготовленных данных
+   * @param {Object} config Объект с настройками генерации
    * @param {String} chars Набор всех используемых символов
-   * @param {String} alphanumericChars Набор цифро-буквенных символов
-   * @param {String} wideChars  Набор "широких" символов
+   * @param {String} alphanumericChars Набор буквенно-цифровых символов
+   * @param {String} wideChars Набор "широких" символов
    * @returns {String} Случайная строка
    */
   function generateRandomString(config, chars, alphanumericChars, wideChars) {
@@ -98,7 +129,7 @@
       while (result.length < config.length && attempts < maxAttempts) {
           const remainingLength = config.length - result.length;
           const randomValues = new Uint32Array(remainingLength);
-          crypto.getRandomValues(randomValues);
+          instCrypto.getRandomValues(randomValues);
 
           let i = 0;
           while (i < remainingLength && result.length < config.length) {
@@ -152,27 +183,22 @@
   }
 
   /**
-   * Генерирует случайную строку с настройками
-   * @param {Object} options - Объект с настройками генерации
-   * @param {number} [options.length=16] - Длина строки
-   * @param {boolean} [options.excludeSimilarChars=false] - Исключить похожие символы (Il!10O)
-   * @param {boolean} [options.firstCharAlphanumeric=false] - Первый символ только буква/цифра
-   * @param {boolean} [options.lastCharAlphanumeric=false] - Последний символ только буква/цифра
-   * @param {boolean} [options.avoidNarrowCharsOnEdges=false] - Не использовать узкие символы в начале/конце
-   * @param {boolean} [options.includeSpecialChars=true] - Включить спецсимволы
-   * @param {boolean} [options.includeUppercase=true] - Включить буквы верхнего регистра
-   * @param {boolean} [options.includeLowercase=true] - Включить буквы нижнего регистра
-   * @param {boolean} [options.includeNumbers=true] - Включить цифры
-   * @param {string} [options.excludeChars=''] - Строка с символами для исключения
-   * @param {boolean} [options.forceFallback=false] - Принудительно использовать менее безопасный метод
+   * Генерация криптографически сильной случайной строки
+   * @param {Object} options Объект с настройками генерации
+   * @param {number} [options.length=16] Длина строки
+   * @param {boolean} [options.excludeSimilarChars=false] Исключить похожие символы (Il!10O)
+   * @param {boolean} [options.firstCharAlphanumeric=false] Первый символ только буква/цифра
+   * @param {boolean} [options.lastCharAlphanumeric=false] Последний символ только буква/цифра
+   * @param {boolean} [options.avoidNarrowCharsOnEdges=false] Не использовать узкие символы в начале/конце
+   * @param {boolean} [options.includeSpecialChars=true] Включить спецсимволы
+   * @param {boolean} [options.includeUppercase=true] Включить буквы верхнего регистра
+   * @param {boolean} [options.includeLowercase=true] Включить буквы нижнего регистра
+   * @param {boolean} [options.includeNumbers=true] Включить цифры
+   * @param {string} [options.excludeChars=''] Строка с символами для исключения
+   * @param {boolean} [options.forceFallback=false] Принудительно использовать менее безопасный метод
    * @returns {string} - Случайная строка
    */
   function generateSecureRandomString(options = {}) {
-    const crypto = getCrypto();
-    if (!options.forceFallback && !crypto.isSecure && typeof console !== 'undefined' && console.warn) {
-      console.warn(crypto.warning);
-    }
-
     const config = {
       length: Math.max(1, parseInt(options.length) || 16),
       excludeSimilarChars: !!options.excludeSimilarChars,
@@ -226,7 +252,7 @@
       throw new Error('Не осталось символов после применения исключений');
     }
 
-    // Создаем буквенно-числовой набор, но с учётом предыдущих преобразований
+    // Создаем буквенно-цифровой набор, но с учётом предыдущих преобразований
     const alphanumericChars = intersectChars(
       (config.includeUppercase ? uppercase : '') +
       (config.includeLowercase ? lowercase : '') +
@@ -251,5 +277,8 @@
     return generateRandomString(config, chars, alphanumericChars, wideChars);
   };
 
-  return generateSecureRandomString;
+  return {
+    generateString: generateSecureRandomString,
+    isSecure,
+  };
 }));

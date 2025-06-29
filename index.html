@@ -110,146 +110,163 @@
             </div>
 
             <!-- НАСТРОЙКИ ГЕНЕРАЦИИ -->
-            <div class="pwd-options q-my-md">
-              <div>
-                <q-toggle
-                  v-model="includeUppercase"
-                  label="Включить буквы верхнего регистра"
-                >
-                </q-toggle>
+            <div class="pwd-options q-my-md row justify-start items-start">
+              <!-- ЛЕВАЯ ЧАСТЬ НАСТРОЕК -->
+              <div class="col-12 col-md-6">
+                <div>
+                  <q-toggle
+                    v-model="includeUppercase"
+                    label="Включить буквы верхнего регистра"
+                  >
+                  </q-toggle>
+                </div>
+                <div>
+                  <q-toggle
+                    v-model="includeLowercase"
+                    label="Включить буквы нижнего регистра"
+                  >
+                  </q-toggle>
+                </div>
+                <div>
+                  <q-toggle
+                    v-model="includeNumbers"
+                    label="Включить цифры"
+                  >
+                  </q-toggle>
+                </div>
+                <div>
+                  <q-toggle
+                    v-model="includeSpecialChars"
+                    label="Включить спецсимволы"
+                  >
+                  </q-toggle>
+                </div>
+                <div class="exclude-chars-wrap q-my-md q-pr-lg">
+                  <q-input
+                    v-model="excludeChars"
+                    label="Исключить символы"
+                    type="textarea"
+                    outlined
+                    filled
+                    autogrow
+                  >
+                  </q-input>
+                </div>
               </div>
-              <div>
-                <q-toggle
-                  v-model="includeLowercase"
-                  label="Включить буквы нижнего регистра"
-                >
-                </q-toggle>
+
+              <!-- ПРАВАЯ ЧАСТЬ НАСТРОЕК -->
+              <div class="col-12 col-md-6">
+                <div>
+                  <q-toggle
+                    v-model="avoidNarrowCharsOnEdges"
+                    label="Убрать узкие символы по краям"
+                  >
+                    <q-icon name="help_outline" color="grey-7" size="16px" class="q-ml-xs">
+                      <q-tooltip
+                        anchor="center left"
+                        self="center right"
+                        :offset="[10, 10]"
+                        class="q-pa-md bg-blue-grey-9 text-white"
+                        style="font-size: 15px"
+                      >
+                        У всех паролей по краям будут убраны<br>
+                        символы, которые трудно выделить<br>
+                        курсором мыши.<br>
+                        Эта настройка помогает избежать ошибок<br>
+                        при копировании и передаче пароля
+                      </q-tooltip>
+                    </q-icon>
+                  </q-toggle>
+                </div>
+                <div>
+                  <q-toggle
+                    v-model="firstCharAlphanumeric"
+                    label="Первый символ буквенно-цифровой"
+                  >
+                    <q-icon name="help_outline" color="grey-7" size="16px" class="q-ml-xs">
+                      <q-tooltip
+                        anchor="center left"
+                        self="center right"
+                        :offset="[10, 10]"
+                        class="q-pa-md bg-blue-grey-9 text-white"
+                        style="font-size: 15px"
+                      >
+                        Эта настройка помогает избежать ошибок<br>
+                        при сохранении пароля в Excel-таблицу,<br>
+                        где первый символ используется в формулах<br>
+                      </q-tooltip>
+                    </q-icon>
+                  </q-toggle>
+                </div>
+                <div>
+                  <q-toggle
+                    v-model="lastCharAlphanumeric"
+                    label="Последний символ буквенно-цифровой"
+                  >
+                  </q-toggle>
+                </div>
+                <div>
+                  <q-toggle
+                    v-model="excludeSimilarChars"
+                    label="Исключить похожие символы"
+                  >
+                    <q-icon name="help_outline" color="grey-7" size="16px" class="q-ml-xs">
+                      <q-tooltip
+                        anchor="center left"
+                        self="center right"
+                        :offset="[10, 10]"
+                        class="q-pa-md bg-blue-grey-9 text-white"
+                        style="font-size: 15px"
+                      >
+                        У всех паролей будут убраны символы,<br>
+                        которые можно спутать с некоторыми<br>
+                        другими символами.<br>
+                        Эта настройка помогает избежать ошибок<br>
+                        при чтении пароля с бумаги или при<br>
+                        использовании различных шрифтов.<br>
+                        Пример похожих символов: Il!10O<br>
+                      </q-tooltip>
+                    </q-icon>
+                  </q-toggle>
+                </div>
+                <div>
+                  <q-toggle
+                    v-model="forceFallback"
+                    label="Использовать менее безопасный метод"
+                    :disable="!isSecure"
+                    color="negative"
+                    flat
+                  >
+                    <q-icon name="warning" color="negative" size="16px" class="q-ml-xs">
+                      <q-tooltip
+                        anchor="center left"
+                        self="center right"
+                        :offset="[10, 10]"
+                        class="q-pa-md bg-blue-grey-9 text-white"
+                        style="font-size: 15px"
+                      >
+                        По умолчанию, для генерации используется<br>
+                        криптографически сильный генератор<br>
+                        случайных чисел (window.crypto).<br>
+                        Эта настройка позволяет использовать<br>
+                        резервный метод генерации на основе<br>
+                        метода Math.random(), что делает<br>
+                        итоговую строку более предсказуемой<br>
+                        (снижается безопасность пароля)
+                      </q-tooltip>
+                    </q-icon>
+                  </q-toggle>
+                </div>
               </div>
-              <div>
-                <q-toggle
-                  v-model="includeNumbers"
-                  label="Включить цифры"
-                >
-                </q-toggle>
-              </div>
-              <div>
-                <q-toggle
-                  v-model="includeSpecialChars"
-                  label="Включить спецсимволы"
-                >
-                </q-toggle>
-              </div>
-              <div>
-                <q-toggle
-                  v-model="avoidNarrowCharsOnEdges"
-                  label="Убрать узкие символы по краям"
-                >
-                  <q-icon name="help_outline" color="grey-7" size="16px" class="q-ml-xs">
-                    <q-tooltip
-                      anchor="center right"
-                      self="center left"
-                      :offset="[10, 10]"
-                      class="q-pa-md bg-blue-grey-9 text-white"
-                      style="font-size: 15px"
-                    >
-                      У всех паролей по краям будут убраны<br>
-                      символы, которые трудно выделить<br>
-                      курсором мыши.<br>
-                      Эта настройка помогает избежать ошибок<br>
-                      при копировании и передаче пароля
-                    </q-tooltip>
-                  </q-icon>
-                </q-toggle>
-              </div>
-              <div>
-                <q-toggle
-                  v-model="firstCharAlphanumeric"
-                  label="Первый символ всегда буквенно-числовой"
-                >
-                  <q-icon name="help_outline" color="grey-7" size="16px" class="q-ml-xs">
-                    <q-tooltip
-                      anchor="center right"
-                      self="center left"
-                      :offset="[10, 10]"
-                      class="q-pa-md bg-blue-grey-9 text-white"
-                      style="font-size: 15px"
-                    >
-                      Эта настройка помогает избежать ошибок<br>
-                      при сохранении пароля в Excel-таблицу,<br>
-                      где первый символ используется в формулах<br>
-                    </q-tooltip>
-                  </q-icon>
-                </q-toggle>
-              </div>
-              <div>
-                <q-toggle
-                  v-model="lastCharAlphanumeric"
-                  label="Последний символ всегда буквенно-числовой"
-                >
-                </q-toggle>
-              </div>
-              <div>
-                <q-toggle
-                  v-model="excludeSimilarChars"
-                  label="Исключить похожие символы"
-                >
-                  <q-icon name="help_outline" color="grey-7" size="16px" class="q-ml-xs">
-                    <q-tooltip
-                      anchor="center right"
-                      self="center left"
-                      :offset="[10, 10]"
-                      class="q-pa-md bg-blue-grey-9 text-white"
-                      style="font-size: 15px"
-                    >
-                      У всех паролей будут убраны символы,<br>
-                      которые можно спутать с некоторыми<br>
-                      другими символами.<br>
-                      Эта настройка помогает избежать ошибок<br>
-                      при чтении пароля с бумаги или при<br>
-                      использовании различных шрифтов.<br>
-                      Пример похожих символов: Il!10O<br>
-                    </q-tooltip>
-                  </q-icon>
-                </q-toggle>
-              </div>
-              <div>
-                <q-toggle
-                  v-model="forceFallback"
-                  label="Использовать менее безопасный метод"
-                  color="negative"
-                  flat
-                >
-                  <q-icon name="warning" color="negative" size="16px" class="q-ml-xs">
-                    <q-tooltip
-                      anchor="center right"
-                      self="center left"
-                      :offset="[10, 10]"
-                      class="q-pa-md bg-blue-grey-9 text-white"
-                      style="font-size: 15px"
-                    >
-                      По умолчанию, для генерации используется<br>
-                      криптографически сильный генератор<br>
-                      случайных чисел (window.crypto).<br>
-                      Эта настройка позволяет использовать<br>
-                      резервный метод генерации на основе<br>
-                      метода Math.random(), что делает<br>
-                      итоговую строку более предсказуемой<br>
-                      (снижается безопасность пароля)
-                    </q-tooltip>
-                  </q-icon>
-                </q-toggle>
-              </div>
-              <div class="exclude-chars-wrap">
-                <q-input
-                  v-model="excludeChars"
-                  label="Исключить символы"
-                  type="textarea"
-                  outlined
-                  filled
-                  autogrow
-                >
-                </q-input>
-              </div>
+
+              <!-- БАННЕР НЕ БЕЗОПАСНОГО МЕТОДА -->
+              <q-banner
+                v-if="forceFallback"
+                class="col-12 q-mt-md text-dark bg-red-2"
+              >
+                <div>Используется менее безопасный способ генерации.</div>
+                <div v-if="!isSecure">Объект "window.crypto" не доступен в вашей системе.</div>
+              </q-banner>
             </div>
             
             <!-- ПОЛЕ С ПАРОЛЯМИ -->
@@ -299,6 +316,11 @@
           const ref = Vue.ref;
           const refs = Vue.$refs;
 
+          // Получаем ссылку на генератор из глобальных констант
+          const generator = window.SecureRandomStringGenerator;
+          // Получаем маркер доступности криптографически сильной генерации
+          const isSecure = ref(generator.isSecure);
+
           const leftDrawerOpen = ref(true);
           const pwdCount = ref(30);
           const pwdLength = ref(24);
@@ -314,7 +336,7 @@
           const includeUppercase = ref(true);
           const lastCharAlphanumeric = ref(false);
           const excludeChars = ref('}{][],.:;!|');
-          const forceFallback = ref(false);
+          const forceFallback = ref(Boolean(isSecure.value !== true));
 
           /** Переключение видимости левого меню */
           function toggleLeftDrawer() {
@@ -337,7 +359,7 @@
             let result = '';
 
             for (let i = 0; i <= pwdCount.value; i++) {
-              const randomString = generateSecureRandomString({
+              const randomString = generator.generateString({
                 length: pwdLength.value,
                 avoidNarrowCharsOnEdges: avoidNarrowCharsOnEdges.value,
                 excludeChars: excludeChars.value,
@@ -401,6 +423,7 @@
             includeNumbers,
             includeSpecialChars,
             includeUppercase,
+            isSecure,
             lastCharAlphanumeric,
             leftDrawerOpen,
             pwdCount,

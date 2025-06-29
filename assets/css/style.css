@@ -10,6 +10,9 @@
   line-height: 22px;
   border: 1px solid #eaeaea;
 }
+.pwd-options {
+  max-width: 740px;
+}
 .exclude-chars-wrap{
   max-width: 500px;
 }

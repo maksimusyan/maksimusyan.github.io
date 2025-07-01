@@ -7,8 +7,6 @@
     root.SecureRandomStringGenerator = factory();
   }
 }(typeof self !== 'undefined' ? self : this, function () {
-  /** Маркер доступности объекта window.crypto */
-  let isSecure = true;
   /** Инстанция объекта Crypto */
   const instCrypto = getCrypto();
 
@@ -22,6 +20,25 @@
       buffer[i] = Math.floor(Math.random() * 4294967296);
     }
     return buffer;
+  }
+
+  /** Получение полного набора символов для генерации */
+  function getAllChars() {
+    return {
+      // Базовые наборы символов
+      uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+      lowercase: 'abcdefghijklmnopqrstuvwxyz',
+      numbers: '0123456789',
+      special: '?!@#$%^&*_+-=|;:,.)(}{][><',
+      // Узкие символы
+      narrow: '1iIl|!j;:,.',
+    };
+  }
+
+  /** Получение полного набора символов для генерации в виде единой строки */
+  function getAllCharsAsString() {
+    const chars = getAllChars();
+    return `${chars.uppercase}${chars.lowercase}${chars.numbers}${chars.special}`;
   }
 
   /**
@@ -47,7 +64,7 @@
     // Если удалось получить window.crypto - возвращаем объект
     // с методом генерации криптографически сильной случайной строки
     if (cryptoObj && cryptoObj.getRandomValues) {
-      return { getRandomValues: cryptoObj.getRandomValues.bind(cryptoObj) };
+      return { getRandomValues: cryptoObj.getRandomValues.bind(cryptoObj), isSecure: true };
     }
 
     // В противном случае переключаем маркер наличия window.crypto
@@ -55,7 +72,7 @@
 
     isSecure = false;
     
-    return { getRandomValues: fallbackGetRandomValues };
+    return { getRandomValues: fallbackGetRandomValues, isSecure: false };
   }
 
   /**
@@ -114,7 +131,7 @@
   }
 
   /**
-   * Генерация случайной строки на основе подготовленных данных
+   * Генерация криптографически сильной случайной строки
    * @param {Object} config Объект с настройками генерации
    * @param {String} chars Набор всех используемых символов
    * @param {String} alphanumericChars Набор буквенно-цифровых символов
@@ -183,7 +200,7 @@
   }
 
   /**
-   * Генерация криптографически сильной случайной строки
+   * Конфигурирование генератора и получение его инстанции
    * @param {Object} options Объект с настройками генерации
    * @param {number} [options.length=16] Длина строки
    * @param {boolean} [options.excludeSimilarChars=false] Исключить похожие символы (Il!10O)
@@ -196,10 +213,10 @@
    * @param {boolean} [options.includeNumbers=true] Включить цифры
    * @param {string} [options.excludeChars=''] Строка с символами для исключения
    * @param {boolean} [options.forceFallback=false] Принудительно использовать менее безопасный метод
-   * @returns {string} - Случайная строка
+   * @returns {function} Генератор случайной строки
    */
-  function generateSecureRandomString(options = {}) {
-    const config = {
+  function config(options = {}) {
+    const opts = {
       length: Math.max(1, parseInt(options.length) || 16),
       excludeSimilarChars: !!options.excludeSimilarChars,
       firstCharAlphanumeric: !!options.firstCharAlphanumeric,
@@ -212,17 +229,16 @@
       excludeChars: typeof options.excludeChars === 'string' ? options.excludeChars : '',
       forceFallback: !!options.forceFallback
     };
-
-    // Базовые наборы символов
-    let uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    let lowercase = 'abcdefghijklmnopqrstuvwxyz';
-    let numbers = '0123456789';
-    let specialChars = '!@#$%^&*()_+-=}{][|;:,.<>?';
-    // Узкие символы
-    const narrowChars = '1iIl|!j;:,.';
+    let {
+      uppercase,
+      lowercase,
+      numbers,
+      special: specialChars,
+      narrow: narrowChars,
+    } = getAllChars();
 
     // Исключить символы, которые можно спутать с другими символами
-    if (config.excludeSimilarChars) {
+    if (opts.excludeSimilarChars) {
       // Символы "IO" похожи на 1,l и 0
       uppercase = uppercase.replace(/[IO]/g, '');
       // Символы "l" похож на 1 и I, а "o" может быть спутана с "0",
@@ -237,15 +253,15 @@
 
     // Формируем основной набор символов
     let chars = '';
-    if (config.includeUppercase) chars += uppercase;
-    if (config.includeLowercase) chars += lowercase;
-    if (config.includeNumbers) chars += numbers;
-    if (config.includeSpecialChars) chars += specialChars;
+    if (opts.includeUppercase) chars += uppercase;
+    if (opts.includeLowercase) chars += lowercase;
+    if (opts.includeNumbers) chars += numbers;
+    if (opts.includeSpecialChars) chars += specialChars;
 
     // Применяем исключения
-    if (config.excludeChars) {
-      // Фильтруем символы, оставляя те, которые не указаны в config.excludeChars
-      chars = chars.split('').filter(char => !config.excludeChars.includes(char)).join('');
+    if (opts.excludeChars) {
+      // Фильтруем символы, оставляя те, которые не указаны в opts.excludeChars
+      chars = chars.split('').filter(char => !opts.excludeChars.includes(char)).join('');
     }
 
     if (chars.length === 0) {
@@ -254,9 +270,9 @@
 
     // Создаем буквенно-цифровой набор, но с учётом предыдущих преобразований
     const alphanumericChars = intersectChars(
-      (config.includeUppercase ? uppercase : '') +
-      (config.includeLowercase ? lowercase : '') +
-      (config.includeNumbers ? numbers : ''),
+      (opts.includeUppercase ? uppercase : '') +
+      (opts.includeLowercase ? lowercase : '') +
+      (opts.includeNumbers ? numbers : ''),
       chars
     );
 
@@ -264,21 +280,22 @@
     const wideChars = chars.split('').filter(char => !narrowChars.includes(char)).join('');
 
     // Проверяем доступность символов для специальных позиций
-    if (config.firstCharAlphanumeric && alphanumericChars.length === 0) {
+    if (opts.firstCharAlphanumeric && alphanumericChars.length === 0) {
       throw new Error('В первой позиции недоступны буквенно-цифровые символы.');
     }
-    if (config.lastCharAlphanumeric && alphanumericChars.length === 0) {
+    if (opts.lastCharAlphanumeric && alphanumericChars.length === 0) {
       throw new Error('В последний позиции недоступны буквенно-цифровые символы');
     }
-    if (config.avoidNarrowCharsOnEdges && wideChars.length === 0) {
+    if (opts.avoidNarrowCharsOnEdges && wideChars.length === 0) {
       throw new Error('Нет широких символов для краев строки');
     }
 
-    return generateRandomString(config, chars, alphanumericChars, wideChars);
+    return () => generateRandomString(opts, chars, alphanumericChars, wideChars);
   };
 
   return {
-    generateString: generateSecureRandomString,
-    isSecure,
+    allChars: getAllCharsAsString(),
+    config,
+    isSecure: instCrypto.isSecure,
   };
 }));

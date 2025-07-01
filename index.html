@@ -307,7 +307,7 @@
     <script src="/assets/js/quasar.umd.prod.js"></script>
     <script src="/assets/js/ru.umd.prod.js"></script>
     <script src="/assets/js/fontawesome-v6.umd.prod.js"></script>
-    <script src="/scripts/random-generator.js"></script>
+    <script src="/scripts/random-string-generator.js"></script>
     <script>
       const app = Vue.createApp({
         setup () {
@@ -316,10 +316,10 @@
           const ref = Vue.ref;
           const refs = Vue.$refs;
 
-          // Получаем ссылку на генератор из глобальных констант
-          const generator = window.SecureRandomStringGenerator;
+          // Получаем ссылку на генератор из глобальной переменной
+          const randomGenerator = window.SecureRandomStringGenerator;
           // Получаем маркер доступности криптографически сильной генерации
-          const isSecure = ref(generator.isSecure);
+          const isSecure = ref(randomGenerator.isSecure);
 
           const leftDrawerOpen = ref(true);
           const pwdCount = ref(30);
@@ -343,6 +343,25 @@
             leftDrawerOpen.value = !leftDrawerOpen.value
           }
 
+          /**
+           * Очистка строки от мусора
+           * @param {string} input Исходная строка
+           * @returns {string} Очищенная строка
+           */
+          function cleanExcludedChars(input) {
+            if (!input) return '';
+
+            // Удаляем:
+            // - Управляющие символы (\x00-\x1F, \x7F)
+            // - Пробелы (\s)
+            let cleaned = input.replace(/[\x00-\x1F\x7F\s]/g, '');
+
+            // Оставляем только уникальные символы
+            cleaned = [...new Set(cleaned.split(''))].join('');
+
+            return cleaned;
+          }
+
           /** Метод обновления списка паролей */
           function updateList() {
             if (pwdCount.value > 100_000) {
@@ -356,22 +375,28 @@
               pwdLength.value = 64;
             }
 
+            // Очищаем символы для исключения от мусора
+            excludeChars.value = cleanExcludedChars(excludeChars.value);
+
+            // Получаем ссылку на генератор
+            const generator = randomGenerator.config({
+              length: pwdLength.value,
+              avoidNarrowCharsOnEdges: avoidNarrowCharsOnEdges.value,
+              excludeChars: excludeChars.value,
+              excludeSimilarChars: excludeSimilarChars.value,
+              firstCharAlphanumeric: firstCharAlphanumeric.value,
+              forceFallback: forceFallback.value,
+              includeLowercase: includeLowercase.value,
+              includeNumbers: includeNumbers.value,
+              includeSpecialChars: includeSpecialChars.value,
+              includeUppercase: includeUppercase.value,
+              lastCharAlphanumeric: lastCharAlphanumeric.value,
+            });
+
             let result = '';
 
             for (let i = 0; i <= pwdCount.value; i++) {
-              const randomString = generator.generateString({
-                length: pwdLength.value,
-                avoidNarrowCharsOnEdges: avoidNarrowCharsOnEdges.value,
-                excludeChars: excludeChars.value,
-                excludeSimilarChars: excludeSimilarChars.value,
-                firstCharAlphanumeric: firstCharAlphanumeric.value,
-                forceFallback: forceFallback.value,
-                includeLowercase: includeLowercase.value,
-                includeNumbers: includeNumbers.value,
-                includeSpecialChars: includeSpecialChars.value,
-                includeUppercase: includeUppercase.value,
-                lastCharAlphanumeric: lastCharAlphanumeric.value,
-              });
+              const randomString = generator();
       
               result += `${randomString}\n`;
             }

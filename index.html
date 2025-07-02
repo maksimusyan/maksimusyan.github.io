@@ -42,20 +42,21 @@
           bordered
           class="bg-grey-2"
         >
-          <div class="q-mt-lg row justify-center items-center">
+          <div class="q-mt-lg column justify-center items-center">
             <q-avatar size="180px">
               <img src="/assets/images/avatar.jpeg">
             </q-avatar>
+            <div class="q-mt-md text-h5 text-center">Maxim Melnik</div>
           </div>
 
           <q-list class="q-mt-lg">
-            <q-item clickable target="_blank" rel="noopener" href="https://github.com/maksimusyan/">
+            <q-item clickable target="_blank" rel="noopener" href="https://github.com/maksimusyan">
               <q-item-section avatar>
                 <q-icon name="code" />
               </q-item-section>
               <q-item-section>
                 <q-item-label>GitHub</q-item-label>
-                <q-item-label caption>github.com/maksimusyan/</q-item-label>
+                <q-item-label caption>github.com/maksimusyan</q-item-label>
               </q-item-section>
             </q-item>
             <q-item clickable target="_blank" rel="noopener" href="mailto:maksimusyan@gmail.com">
@@ -86,6 +87,7 @@
                 v-model.number="pwdCount"
                 label="Количество паролей"
                 type="number"
+                @update:model-value="configChangeHandler"
                 class="col-3 q-mr-sm"
                 outlined
                 dense
@@ -95,6 +97,7 @@
                 v-model.number="pwdLength"
                 label="Длина пароля"
                 type="number"
+                @update:model-value="configChangeHandler"
                 class="col-3 q-mr-sm"
                 outlined
                 dense
@@ -117,6 +120,7 @@
                   <q-toggle
                     v-model="includeUppercase"
                     label="Включить буквы верхнего регистра"
+                    @update:model-value="configChangeHandler"
                   >
                   </q-toggle>
                 </div>
@@ -124,6 +128,7 @@
                   <q-toggle
                     v-model="includeLowercase"
                     label="Включить буквы нижнего регистра"
+                    @update:model-value="configChangeHandler"
                   >
                   </q-toggle>
                 </div>
@@ -131,6 +136,7 @@
                   <q-toggle
                     v-model="includeNumbers"
                     label="Включить цифры"
+                    @update:model-value="configChangeHandler"
                   >
                   </q-toggle>
                 </div>
@@ -138,6 +144,7 @@
                   <q-toggle
                     v-model="includeSpecialChars"
                     label="Включить спецсимволы"
+                    @update:model-value="configChangeHandler"
                   >
                   </q-toggle>
                 </div>
@@ -146,6 +153,7 @@
                     v-model="excludeChars"
                     label="Исключить символы"
                     type="textarea"
+                    @update:model-value="configChangeHandler"
                     outlined
                     filled
                     autogrow
@@ -160,6 +168,7 @@
                   <q-toggle
                     v-model="avoidNarrowCharsOnEdges"
                     label="Убрать узкие символы по краям"
+                    @update:model-value="configChangeHandler"
                   >
                     <q-icon name="help_outline" color="grey-7" size="16px" class="q-ml-xs">
                       <q-tooltip
@@ -182,6 +191,7 @@
                   <q-toggle
                     v-model="firstCharAlphanumeric"
                     label="Первый символ буквенно-цифровой"
+                    @update:model-value="configChangeHandler"
                   >
                     <q-icon name="help_outline" color="grey-7" size="16px" class="q-ml-xs">
                       <q-tooltip
@@ -202,6 +212,7 @@
                   <q-toggle
                     v-model="lastCharAlphanumeric"
                     label="Последний символ буквенно-цифровой"
+                    @update:model-value="configChangeHandler"
                   >
                   </q-toggle>
                 </div>
@@ -209,6 +220,7 @@
                   <q-toggle
                     v-model="excludeSimilarChars"
                     label="Исключить похожие символы"
+                    @update:model-value="configChangeHandler"
                   >
                     <q-icon name="help_outline" color="grey-7" size="16px" class="q-ml-xs">
                       <q-tooltip
@@ -234,6 +246,7 @@
                     v-model="forceFallback"
                     label="Использовать менее безопасный метод"
                     :disable="!isSecure"
+                    @update:model-value="configChangeHandler"
                     color="negative"
                     flat
                   >
@@ -253,6 +266,28 @@
                         метода Math.random(), что делает<br>
                         итоговую строку более предсказуемой<br>
                         (снижается безопасность пароля)
+                      </q-tooltip>
+                    </q-icon>
+                  </q-toggle>
+                </div>
+                <div>
+                  <q-toggle
+                    v-model="saveConfigToStorage"
+                    label="Запоминать настройки"
+                    @update:model-value="saveConfigChange"
+                  >
+                    <q-icon name="help_outline" color="grey-7" size="16px" class="q-ml-xs">
+                      <q-tooltip
+                        anchor="center left"
+                        self="center right"
+                        :offset="[10, 10]"
+                        class="q-pa-md bg-blue-grey-9 text-white"
+                        style="font-size: 15px"
+                      >
+                        Ключевые параметры генератора будут<br>
+                        сохранены в localStorage браузера и<br>
+                        будут загружены при повторном<br>
+                        открытии или обновлении страницы
                       </q-tooltip>
                     </q-icon>
                   </q-toggle>
@@ -316,31 +351,58 @@
           const ref = Vue.ref;
           const refs = Vue.$refs;
 
+          const STORAGE_KEY = 'random-generator-config';
+          const store = window.localStorage;
           // Получаем ссылку на генератор из глобальной переменной
           const randomGenerator = window.SecureRandomStringGenerator;
           // Получаем маркер доступности криптографически сильной генерации
           const isSecure = ref(randomGenerator.isSecure);
 
+          let storeConf = {};
+
+          try {
+            const findConf = store.getItem(STORAGE_KEY);
+
+            if (typeof findConf === 'string' && findConf.length > 0) {
+              storeConf = JSON.parse(findConf);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+
           const leftDrawerOpen = ref(true);
           const pwdCount = ref(30);
-          const pwdLength = ref(24);
+          const pwdLength = ref('length' in storeConf ? storeConf.length : 24);
           const pwdList = ref('');
+          const saveConfigToStorage = ref(Object.keys(storeConf).length > 0 ? true : false);
 
           // Настройка генерации пароля
-          const avoidNarrowCharsOnEdges = ref(true);
-          const excludeSimilarChars = ref(false);
-          const firstCharAlphanumeric = ref(false);
-          const includeLowercase = ref(true);
-          const includeNumbers = ref(true);
-          const includeSpecialChars = ref(true);
-          const includeUppercase = ref(true);
-          const lastCharAlphanumeric = ref(false);
-          const excludeChars = ref('}{][],.:;!|');
+          const avoidNarrowCharsOnEdges = ref('avoidNarrowCharsOnEdges' in storeConf ? storeConf.avoidNarrowCharsOnEdges : true);
+          const excludeSimilarChars = ref('excludeSimilarChars' in storeConf ? storeConf.excludeSimilarChars : false);
+          const firstCharAlphanumeric = ref('firstCharAlphanumeric' in storeConf ? storeConf.firstCharAlphanumeric : false);
+          const includeLowercase = ref('includeLowercase' in storeConf ? storeConf.includeLowercase : true);
+          const includeNumbers = ref('includeNumbers' in storeConf ? storeConf.includeNumbers : true);
+          const includeSpecialChars = ref('includeSpecialChars' in storeConf ? storeConf.includeSpecialChars : true);
+          const includeUppercase = ref('includeUppercase' in storeConf ? storeConf.includeUppercase : true);
+          const lastCharAlphanumeric = ref('lastCharAlphanumeric' in storeConf ? storeConf.lastCharAlphanumeric : false);
+          const excludeChars = ref('excludeChars' in storeConf ? storeConf.excludeChars : ',.:;!|');
           const forceFallback = ref(Boolean(isSecure.value !== true));
 
-          /** Переключение видимости левого меню */
-          function toggleLeftDrawer() {
-            leftDrawerOpen.value = !leftDrawerOpen.value
+          /** Получение актуального конфига */
+          function getConfig() {
+            return {
+              length: pwdLength.value,
+              avoidNarrowCharsOnEdges: avoidNarrowCharsOnEdges.value,
+              excludeChars: excludeChars.value,
+              excludeSimilarChars: excludeSimilarChars.value,
+              firstCharAlphanumeric: firstCharAlphanumeric.value,
+              forceFallback: forceFallback.value,
+              includeLowercase: includeLowercase.value,
+              includeNumbers: includeNumbers.value,
+              includeSpecialChars: includeSpecialChars.value,
+              includeUppercase: includeUppercase.value,
+              lastCharAlphanumeric: lastCharAlphanumeric.value,
+            };
           }
 
           /**
@@ -362,8 +424,16 @@
             return cleaned;
           }
 
-          /** Метод обновления списка паролей */
-          function updateList() {
+          /** Проверка и исправление параметров генератора */
+          function configChangeHandler() {
+            validateParams();
+            saveConfig();
+          }
+
+          /** Проверка валидности параметров генератора */
+          function validateParams() {
+            if (pwdCount.value < 2) pwdCount.value = 1;
+
             if (pwdCount.value > 100_000) {
               pwdCount.value = 100_000;
               alert('Слишком много паролей, большая нагрузка на процессор. Сброшено до 100К');
@@ -378,20 +448,24 @@
             // Очищаем символы для исключения от мусора
             excludeChars.value = cleanExcludedChars(excludeChars.value);
 
+            // Если "выключены" все наборы символов,
+            // то включаем первый из них
+            if ([
+              includeLowercase.value,
+              includeNumbers.value,
+              includeSpecialChars.value,
+              includeUppercase.value,
+            ].every((val) => val === false)) {
+              includeUppercase.value = true;
+            }
+          }
+
+          /** Метод обновления списка паролей */
+          function updateList() {
+            validateParams();
+
             // Получаем ссылку на генератор
-            const generator = randomGenerator.config({
-              length: pwdLength.value,
-              avoidNarrowCharsOnEdges: avoidNarrowCharsOnEdges.value,
-              excludeChars: excludeChars.value,
-              excludeSimilarChars: excludeSimilarChars.value,
-              firstCharAlphanumeric: firstCharAlphanumeric.value,
-              forceFallback: forceFallback.value,
-              includeLowercase: includeLowercase.value,
-              includeNumbers: includeNumbers.value,
-              includeSpecialChars: includeSpecialChars.value,
-              includeUppercase: includeUppercase.value,
-              lastCharAlphanumeric: lastCharAlphanumeric.value,
-            });
+            const generator = randomGenerator.config(getConfig());
 
             let result = '';
 
@@ -404,6 +478,28 @@
             pwdList.value = result;
           }
           
+          /** Сохранение настроек генератора в localStorage */
+          function saveConfig() {
+            if (!saveConfigToStorage.value) return false;
+            
+            const configStr = JSON.stringify(getConfig());
+ 
+            store.setItem(STORAGE_KEY, configStr);
+          }
+
+          /** Обработчик события переключения кнопки сохранения настроек */
+          function saveConfigChange(value) {
+            // Если сохранение в localStorage отключено
+            if (value === false && Object.keys(storeConf).length > 0) {
+              // Удаляем ключ из хранилища
+              store.removeItem(STORAGE_KEY);
+              return;
+            }
+
+            // В противном случае проверяем и сохраняем настройки
+            configChangeHandler();
+          }
+
           /** Метод сохранения списка паролей в файл */
           function saveToFile() {
             if (!pwdList.value.trim()) {
@@ -432,6 +528,12 @@
             URL.revokeObjectURL(url);
           };
 
+
+          /** Переключение видимости левого меню */
+          function toggleLeftDrawer() {
+            leftDrawerOpen.value = !leftDrawerOpen.value
+          }
+
           // События после монтирования приложения
           onMounted(() => {
             console.log(pwdList.value);
@@ -440,6 +542,7 @@
 
           return {
             avoidNarrowCharsOnEdges,
+            configChangeHandler,
             excludeChars,
             excludeSimilarChars,
             firstCharAlphanumeric,
@@ -454,6 +557,8 @@
             pwdCount,
             pwdLength,
             pwdList,
+            saveConfigChange,
+            saveConfigToStorage,
             saveToFile,
             toggleLeftDrawer,
             updateList,

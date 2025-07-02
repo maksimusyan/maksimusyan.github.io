@@ -43,7 +43,7 @@
 
   /**
    * Получение объекта с методом генерации случайных чисел
-   * @returns {Object} Объект Crypto или его аналог
+   * @returns {object} Объект Crypto или его аналог
    */
   function getCrypto() {
     let cryptoObj;
@@ -77,12 +77,12 @@
 
   /**
    * Получение допустимых символов для конкретной позиции символа в строке пароля
-   * @param {Object} options Объект с настройками генерации
-   * @param {String} chars Набор всех используемых символов
-   * @param {String} alphanumericChars Набор буквенно-цифровых символов
-   * @param {String} wideChars  Набор "широких" символов
-   * @param {Number} position Позиция генерируемого символа
-   * @returns {String} Строка с допустимыми символами
+   * @param {object} options Объект с настройками генерации
+   * @param {string} chars Набор всех используемых символов
+   * @param {string} alphanumericChars Набор буквенно-цифровых символов
+   * @param {string} wideChars  Набор "широких" символов
+   * @param {number} position Позиция генерируемого символа
+   * @returns {string} Строка с допустимыми символами
    */
   function getAvailableChars(options, chars, alphanumericChars, wideChars, position) {
     // По умолчанию доступны все указанные символы 
@@ -133,10 +133,10 @@
   /**
    * Генерация криптографически сильной случайной строки
    * @param {Object} config Объект с настройками генерации
-   * @param {String} chars Набор всех используемых символов
-   * @param {String} alphanumericChars Набор буквенно-цифровых символов
-   * @param {String} wideChars Набор "широких" символов
-   * @returns {String} Случайная строка
+   * @param {string} chars Набор всех используемых символов
+   * @param {string} alphanumericChars Набор буквенно-цифровых символов
+   * @param {string} wideChars Набор "широких" символов
+   * @returns {string} Случайная строка
    */
   function generateRandomString(config, chars, alphanumericChars, wideChars) {
       const maxAttempts = 10;
@@ -200,8 +200,34 @@
   }
 
   /**
+   * Перемешивание символов в строке
+   * @param {string} chars Исходная строка
+   * @returns {string} Итоговая строка
+   */
+  function shuffleChars(chars) {
+    if (typeof chars !== 'string' || chars.length === 0) return chars;
+
+    // Превращаем строку в массив
+    const arrChars = chars.split('');
+
+    // Проходим по массиву в обратном порядке
+    for (let i = arrChars.length - 1; i > 0; i--) {
+      // Получаем случайный индекс от 0 до i
+      let j = Math.floor(Math.random() * (i + 1));
+
+      // Меняем элементы местами
+      let t = arrChars[i];
+      arrChars[i] = arrChars[j];
+      arrChars[j] = t;
+    }
+
+    // Склеиваем массив обратно в строку и возвращаем
+    return arrChars.join('');
+  }
+
+  /**
    * Конфигурирование генератора и получение его инстанции
-   * @param {Object} options Объект с настройками генерации
+   * @param {object} options Объект с настройками генерации
    * @param {number} [options.length=16] Длина строки
    * @param {boolean} [options.excludeSimilarChars=false] Исключить похожие символы (Il!10O)
    * @param {boolean} [options.firstCharAlphanumeric=false] Первый символ только буква/цифра
@@ -289,6 +315,9 @@
     if (opts.avoidNarrowCharsOnEdges && wideChars.length === 0) {
       throw new Error('Нет широких символов для краев строки');
     }
+
+    // Перемешиваем набор символов
+    //chars = shuffleChars(chars);
 
     return () => generateRandomString(opts, chars, alphanumericChars, wideChars);
   };
